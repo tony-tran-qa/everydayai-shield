@@ -1,0 +1,75 @@
+{
+  "app_name": "EverydayAI-Shield",
+  "version": "1.0.0",
+  "scan_interval_seconds": 60,
+  "log_retention_days": 30,
+  "alert_on_warning": true,
+  "checks": {
+    "ollama_exposure": {
+      "enabled": true,
+      "severity": "HIGH",
+      "description": "Detects if Ollama API is exposed beyond localhost"
+    },
+    "mcp_package_integrity": {
+      "enabled": true,
+      "severity": "CRITICAL",
+      "description": "Checks MCP server npm packages for known malicious indicators (supply chain RAT detection)"
+    },
+    "claude_code_permissions": {
+      "enabled": true,
+      "severity": "HIGH",
+      "description": "Audits Claude Code CLI file access scope and config"
+    },
+    "suspicious_processes": {
+      "enabled": true,
+      "severity": "HIGH",
+      "description": "Detects AI-tool-spawned processes with suspicious network or file behavior"
+    },
+    "clipboard_exfil": {
+      "enabled": true,
+      "severity": "MEDIUM",
+      "description": "Monitors clipboard for sensitive data patterns when AI tools are active"
+    },
+    "browser_extension_audit": {
+      "enabled": true,
+      "severity": "MEDIUM",
+      "description": "Audits Chrome/Edge extensions for AI-adjacent risky permissions"
+    },
+    "localhost_port_scan": {
+      "enabled": true,
+      "severity": "HIGH",
+      "description": "Detects unexpected localhost services spun up by AI tools"
+    },
+    "env_secrets_exposure": {
+      "enabled": true,
+      "severity": "CRITICAL",
+      "description": "Checks for API keys exposed in env vars, .env files, or shell history"
+    },
+    "network_beaconing": {
+      "enabled": true,
+      "severity": "HIGH",
+      "description": "Detects unusual outbound connections from AI tool processes"
+    }
+  },
+  "known_safe_ports": [11434, 3000, 8080, 8443, 443, 80],
+  "known_ai_processes": ["ollama", "claude", "node", "python", "uvx", "npx"],
+  "sensitive_env_patterns": ["API_KEY", "SECRET", "TOKEN", "PASSWORD", "ANTHROPIC", "OPENAI", "GEMINI"],
+  "mcp_paths": [
+    "%APPDATA%\\Claude\\claude_desktop_config.json",
+    "%USERPROFILE%\\.cursor\\mcp.json",
+    "%USERPROFILE%\\.config\\claude\\claude_desktop_config.json"
+  ],
+  "suspicious_npm_packages": [
+    "axios-proxy",
+    "claude-mcp-helper",
+    "openai-tools-extra",
+    "mcp-utils-extended",
+    "anthropic-bridge"
+  ],
+  "suspicious_domains": [
+    "pastebin.com",
+    "ngrok.io",
+    "serveo.net",
+    "localhost.run"
+  ]
+}

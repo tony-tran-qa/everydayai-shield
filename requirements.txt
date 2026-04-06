@@ -1,0 +1,13 @@
+# EverydayAI-Shield Requirements
+# Core (stdlib only - no install needed for basic operation)
+# Python 3.11+ required
+
+# Optional - enables system tray icon
+pystray>=0.19.5
+Pillow>=10.0.0
+
+# Optional - enables Windows service mode
+pywin32>=306
+
+# Dev / testing
+pytest>=8.0.0
