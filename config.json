@@ -8,7 +8,7 @@
     "ollama_exposure": {
       "enabled": true,
       "severity": "HIGH",
-      "description": "Detects if Ollama API is exposed beyond localhost"
+      "description": "Detects if Ollama API is exposed beyond localhost (0.0.0.0, [::], LAN IP, or non-loopback OLLAMA_HOST in process/user/machine env)"
     },
     "mcp_package_integrity": {
       "enabled": true,
@@ -49,6 +49,15 @@
       "enabled": true,
       "severity": "HIGH",
       "description": "Detects unusual outbound connections from AI tool processes"
+    },
+    "mcp_injection_exposure": {
+      "enabled": true,
+      "severity": "HIGH",
+      "description": "Expects high-privilege MCP servers (shell/registry/filesystem) to be OFF - when on, prompt injection in content Claude reads can act on this PC",
+      "high_privilege_patterns": ["windows-mcp", "windows_mcp", "filesystem", "desktop-commander", "desktop_commander", "powershell", "shell", "terminal"],
+      "extension_settings_dir": "%APPDATA%\\Claude\\Claude Extensions Settings",
+      "claude_code_config": "%USERPROFILE%\\.claude.json",
+      "claude_code_settings": "%USERPROFILE%\\.claude\\settings.json"
     }
   },
   "known_safe_ports": [11434, 3000, 8080, 8443, 443, 80],

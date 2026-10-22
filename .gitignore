@@ -33,3 +33,6 @@ build/
 .env
 *.env
 secrets.json
+
+# Local backups
+*.bak

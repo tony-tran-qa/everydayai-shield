@@ -6,7 +6,7 @@ Handles check registration, scheduling, logging, and result aggregation.
 import json
 import logging
 import os
-import importlib
+import importlib.util
 import time
 import threading
 from datetime import datetime

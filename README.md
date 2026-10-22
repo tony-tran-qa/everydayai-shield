@@ -14,13 +14,56 @@ attack surfaces McAfee doesn't know about.
 |-------|----------|-----------------|
 | `mcp_package_integrity` | CRITICAL | Supply chain RAT attacks (axios-style), malicious npm postinstall hooks, suspicious MCP server packages |
 | `env_secrets_exposure` | CRITICAL | API keys in .env files, PowerShell history, Windows Registry, environment variables |
-| `ollama_exposure` | HIGH | Ollama bound to 0.0.0.0 (network-accessible instead of localhost-only) |
+| `ollama_exposure` | HIGH | Ollama API reachable beyond this PC: bound to 0.0.0.0, `[::]` (IPv6 wildcard) or a LAN IP, or `OLLAMA_HOST` set to a non-loopback host in process/user/machine env |
+| `mcp_injection_exposure` | HIGH | High-privilege MCP servers (shell, registry, file-write) left ON — see [MCP injection exposure](#mcp-injection-exposure-expected-status-off) |
 | `claude_code_permissions` | HIGH | autoApprove mode, unrestricted Bash tool, admin-elevated sessions |
 | `localhost_port_scan` | HIGH | ngrok tunnels, unexpected AI-spawned local services, 0.0.0.0 binding |
 | `network_beaconing` | HIGH | AI processes connecting to paste/tunnel sites (pastebin, ngrok, webhook.site) |
 | `suspicious_processes` | HIGH | Encoded PowerShell, persistence in scheduled tasks and registry Run keys |
 | `browser_extension_audit` | MEDIUM | Extensions with clipboard read, debugger, native messaging, or <all_urls> permissions |
 | `clipboard_exfil` | MEDIUM | Sensitive data (API keys, private keys, SSN, credit cards) in clipboard before pasting to AI |
+
+---
+
+## MCP injection exposure: expected status OFF
+
+**Expected state:** high-privilege MCP servers (e.g. Windows-MCP, filesystem,
+desktop-commander, any shell/PowerShell/terminal server) are **disabled** unless a
+specific session needs them, and disabled again afterwards.
+
+**Why:** an MCP server runs with your full Windows user rights and no sandbox.
+The risk is not the model deciding to do harm — it is **prompt injection**:
+hidden instructions inside content the model reads (a web page, job posting,
+email, PDF) are just more text in its context. With no high-privilege server
+connected, the worst outcome is a bad answer. With one connected, the injected
+text can run PowerShell, edit the registry or write files on this PC.
+
+| Result | Meaning |
+|--------|---------|
+| PASS | No high-privilege MCP server enabled anywhere scanned |
+| FAIL | At least one is enabled, configured, or auto-approved |
+
+**Sources scanned:** Claude Desktop extension toggles
+(`%APPDATA%\Claude\Claude Extensions Settings\*.json`, `isEnabled`), manual
+`mcpServers` in the files listed in `mcp_paths`, Claude Code servers in
+`~/.claude.json` (user and project scope), and Claude Code `permissions.allow`
+rules that pre-approve a high-privilege server's tools (no human gate).
+
+**Fix on FAIL:** Claude Desktop → Settings → Extensions → toggle the flagged
+server off. Never choose "Always allow" for PowerShell / Registry / FileSystem
+tools. The pattern list is configurable via
+`checks.mcp_injection_exposure.high_privilege_patterns`.
+
+## Ollama exposure: expected status loopback only
+
+**Expected state:** `netstat -ano | findstr 11434` shows only `127.0.0.1:11434`
+(or `[::1]:11434`). The Ollama API has no authentication, so any other binding lets
+anyone who can reach the port list, pull, delete and run models.
+
+FAIL on: `0.0.0.0` (IPv4 wildcard), `[::]` (IPv6 wildcard), a LAN/public IP, or
+`OLLAMA_HOST` set to a non-loopback value in the process, **user or machine**
+environment (flagged before it takes effect on the next Ollama restart). A custom
+port in `OLLAMA_HOST` is checked too.
 
 ---
 
@@ -144,6 +187,7 @@ EverydayAI-Shield/
 │   ├── check_mcp_package_integrity.py    # Supply chain (RAT detection)
 │   ├── check_env_secrets_exposure.py     # Credentials in wrong places
 │   ├── check_ollama_exposure.py          # Ollama network binding
+│   ├── check_mcp_injection_exposure.py   # High-privilege MCP servers ON (prompt-injection reach)
 │   ├── check_claude_code_permissions.py  # Claude Code CLI config audit
 │   ├── check_localhost_port_scan.py      # Unexpected local services
 │   ├── check_network_beaconing.py        # AI process outbound connections
@@ -164,6 +208,7 @@ EverydayAI-Shield/
 | Ransomware behavior | ✅ | — |
 | MCP supply chain packages | ❌ | ✅ |
 | Ollama network exposure | ❌ | ✅ |
+| Prompt-injection reach via MCP | ❌ | ✅ |
 | Claude Code config risks | ❌ | ✅ |
 | API keys in clipboard/env | ❌ | ✅ |
 | ngrok tunnels | Partial | ✅ |
